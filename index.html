@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>game</title>
+	</head>
+	<style type="text/css">
+		body,html{
+			overflow: hidden;
+			padding: 0px;
+			margin: 0px;
+		}
+		canvas{
+		    width: 10rem;
+		}
+	</style>
+	<script src="js/lib-flexible.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/pixi.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/snow.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/gift.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/zepto.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/touch.js" type="text/javascript" charset="utf-8"></script>
+	<body>
+		
+	</body>
+	<script type="text/javascript">
+		var app = new PIXI.Application(800, 520, {backgroundColor : 0xffffff});
+		document.body.appendChild(app.view);
+		
+		//建立背景容器
+		var container_bg = new PIXI.Container();
+		app.stage.addChild(container_bg);
+		var sprite_bg = PIXI.Sprite.fromImage('img/snow/bg.jpg');
+		container_bg.addChild(sprite_bg);
+		
+		//绘制树
+		var container_tree = new PIXI.Container();
+		app.stage.addChild(container_tree);
+		
+		
+		//定义x周距中心偏移量
+		var a_arr = [50,80,150,200];
+		var center_x = function(a,h) {
+			//a -初始中心店距离最近树的距离
+			var b = 100;//初始中心点距离视觉焦点的距离
+			return (a*(b+h)/b).toFixed(2);
+		}
+		
+		container_tree.width = 800;
+		container_tree.height = 520;
+		// Create a new texture
+		var texture = PIXI.Texture.fromImage('img/snow/tree.png');
+		var treesInit = [
+			{num:5,dir:'left',col:0},
+			{num:7,dir:'left',col:1},
+			{num:8,dir:'left',col:2},
+			{num:8,dir:'left',col:3},
+			{num:5,dir:'right',col:0},
+			{num:6,dir:'right',col:1},
+			{num:8,dir:'right',col:2},
+		]
+		var treesArr = [];
+		treesInit.map(function(v,index) {
+			for (var i = 0; i < v.num; i++) {
+				var tree_obj = new treeObj(v.dir,i,v.col,v.num);
+			    var tree = new PIXI.Sprite(texture);
+			    tree.anchor.set(tree.width/2,tree.height);
+				tree.x = tree_obj.get_x(tree_obj.get_initY());
+			    tree.y = tree_obj.get_y();
+			    var scale_num = tree_obj.get_scale(tree.y);
+			    tree.scale.set(scale_num);
+			    container_tree.addChild(tree);
+			    treesArr.push({tree:tree,tree_obj:tree_obj});
+			}
+		})
+		
+		var nowTime  = new Date().getTime();
+		app.ticker.add(function(delta) {
+			for(var i = 0,l = treesArr.length;i < l; i++) {
+				treesArr[i].tree.y+=(1+delta);
+				treesArr[i].tree.x = treesArr[i].tree_obj.get_x(treesArr[i].tree.y);
+				var scale_num = treesArr[i].tree_obj.get_scale(treesArr[i].tree.y);
+		    	treesArr[i].tree.scale.set(scale_num);
+		    	if(treesArr[i].tree.y >= 560) {
+		    		treesArr[i].tree.y = 190;
+		    		treesArr[i].tree.x = treesArr[i].tree_obj.get_x(treesArr[i].tree.y);
+		    		var scale_num = treesArr[i].tree_obj.get_scale(treesArr[i].tree.y);
+		    		treesArr[i].tree.scale.set(scale_num);
+		    	}
+			}
+		});
+
+		//绘制礼物
+		var container_gift = new PIXI.Container();
+		app.stage.addChild(container_gift);
+		container_gift.width = 800;
+		container_gift.height = 520;
+		// Create a new texture
+		var gift1 = PIXI.Texture.fromImage('img/snow/gift1.png');
+		var gift2 = PIXI.Texture.fromImage('img/snow/gift2.png');
+		var gift3 = PIXI.Texture.fromImage('img/snow/gift3.png');
+		
+		var giftPic = [gift1,gift2,gift3];
+		var scrollGift = [];
+		
+		var k = 0,timeInit;
+		var l = scrollGift.length;
+		function mathSetGift(flag) {
+			timeInit = setTimeout(function() {
+				var gift_obj = new giftObj();
+				var giftNum = Math.round(Math.random()*2+0);
+				gift_obj.num = giftNum;
+			    var gift = new PIXI.Sprite(giftPic[giftNum]);
+			    gift.anchor.set(1);
+				gift.x = gift_obj.get_x(0);
+			    gift.y = gift_obj.get_initY();
+			    gift.scale.set(0.5);
+			    container_gift.addChild(gift);
+			    scrollGift.push({gift:gift,gift_obj:gift_obj});
+			    l = scrollGift.length;
+			    //console.log("add "+ l);
+			    //console.log(scrollGift.toString());
+			    if(flag) {
+			    	k++;
+			    	if(k >= 4) {
+				    	clearTimeout(timeInit);
+				    } else {
+				    	mathSetGift(true);
+				    }
+			    }
+			},Math.round(Math.random()*4000+1000))
+		}
+		mathSetGift(true);
+		
+		
+		
+		//绘制小人和箭头
+		var container_p = new PIXI.Container();
+		app.stage.addChild(container_p);
+		container_p.width = 800;
+		container_p.height = 520;
+		
+		var people = PIXI.Sprite.fromImage('img/snow/people.png');
+		container_p.addChild(people);
+		people.scale.set(0.6);
+		people.x = 400;
+		people.y = 380;
+		
+		
+		var jian1 = PIXI.Sprite.fromImage('img/snow/jian.png');
+		container_p.addChild(jian1);
+		jian1.anchor.set(0.5);
+		jian1.rotation = 135;
+		jian1.x = 90;
+		jian1.y = 430;
+		jian1.interactive = true;
+		jian1.buttonMode = true;
+		jian1.on('pointerdown', onClick1).on('pointerup', onClick1_);
+		function onClick1() {
+//			if(people.x >= 200) people.x-=20;
+//			people.rotation = -0.1;
+dir = "left";
+animateP();
+		}
+		
+		function onClick1_() {
+//			people.rotation = 0;
+//animateP2();
+		}
+		
+		var jian2 = PIXI.Sprite.fromImage('img/snow/jian.png');
+		container_p.addChild(jian2);
+		jian2.x = 730;
+		jian2.y = 380;
+		jian2.interactive = true;
+		jian2.buttonMode = true;
+		jian2.on('pointerdown', onClick2).on('pointerup', onClick2_);
+		function onClick2() {
+//			if(people.x <= 640) people.x+=20;
+//			people.rotation = 0.1;
+dir = "right";
+animateP();
+		}
+		function onClick2_() {
+//			people.rotation = 0;
+//animateP2();
+		}
+		
+		var aniP,dir,aniP2;
+		function animateP() {
+			cancelAnimationFrame(aniP);
+			cancelAnimationFrame(aniP2);
+			if(dir == 'right') {
+				people.rotation += 0.01;
+				if(people.x <= 640 && Math.abs(people.rotation) < 0.1) people.x+=5;
+			} else if(dir == 'left') {
+				people.rotation -= 0.01;
+				if(people.x >= 200 && Math.abs(people.rotation) < 0.1) people.x-=5;
+			}
+	        if(Math.abs(people.rotation) >= 0.1) {
+	        	cancelAnimationFrame(aniP);
+	        	animateP2();
+	        	return;
+	        }
+	        
+        	aniP = requestAnimationFrame(animateP);
+	    	
+	    }
+		function animateP2() {
+			if(dir == 'right') {
+				people.rotation -= 0.01;
+			} else if(dir == 'left') {
+				people.rotation += 0.01;
+			}
+	        if(Math.abs(people.rotation) <= 0.01) {
+	        	people.rotation = 0;
+	        	cancelAnimationFrame(aniP2);
+	        	return;
+	        }
+        	aniP2 = requestAnimationFrame(animateP2);
+	    	
+	    }
+		
+		var style = new PIXI.TextStyle({
+		    fontFamily: 'Arial',
+		    fontSize: 36,
+		    fontStyle: 'italic',
+		    fontWeight: 'bold',
+		    fill: ['#ffffff', '#00ff99'], // gradient
+		    stroke: '#4a1850',
+		    strokeThickness: 5,
+		    dropShadow: true,
+		    dropShadowColor: '#000000',
+		    dropShadowBlur: 4,
+		    dropShadowAngle: Math.PI / 6,
+		    dropShadowDistance: 6,
+		    wordWrap: true,
+		    wordWrapWidth: 440
+		});
+		
+		var richText1 = new PIXI.Text('0', style);
+		var richText2 = new PIXI.Text('0', style);
+		var richText3 = new PIXI.Text('0', style);
+		richText1.x = 90;
+		richText1.y = 63;
+		richText1.anchor.x = 0.5;
+		richText1.anchor.y = 0.5;
+		richText2.x = 188;
+		richText2.y = 63;
+		richText2.anchor.x = 0.5;
+		richText2.anchor.y = 0.5;
+		richText3.x = 280;
+		richText3.y = 63;
+		richText3.anchor.x = 0.5;
+		richText3.anchor.y = 0.5;
+		app.stage.addChild(richText1);
+		app.stage.addChild(richText2);
+		app.stage.addChild(richText3);
+		
+		
+		var textAdd = new PIXI.Text('+1', style);
+		textAdd.x = 420;
+		textAdd.y = 200;
+		textAdd.anchor.x = 0.5;
+		textAdd.anchor.y = 1;
+		textAdd.scale.set(0);
+		app.stage.addChild(textAdd);
+		var count = 0,ani;
+		function animate() {
+			count+= 0.2;
+		        textAdd.scale.set(count);
+		        if(count >= 3) {
+		        	count = 0;
+		        	textAdd.scale.set(0);
+		        	cancelAnimationFrame(ani);
+		        	return;
+		        }
+	    	ani = requestAnimationFrame(animate);
+	    }
+		
+		
+		//吃掉后加分
+		app.ticker.add(function(delta) {
+			for(var i = 0,flag = true;i < l; flag?i++:i) {
+				var tickObj = scrollGift[i],
+				speed = tickObj.gift_obj.mathSpeed;
+				tickObj.gift.y+=speed;
+				tickObj.gift.x = tickObj.gift_obj.get_x(tickObj.gift.y-190);
+				var scale_num = tickObj.gift_obj.get_scale(tickObj.gift.y);
+		    	tickObj.gift.scale.set(scale_num);
+		    	
+		    	if(tickObj.gift.y >= 560) {
+		    		tickObj.gift.y = tickObj.gift_obj.get_initY();
+		    		tickObj.gift.x = tickObj.gift_obj.get_x(0);
+		    		var scale_num = tickObj.gift_obj.get_scale(tickObj.gift.y-190);
+		    		tickObj.gift.scale.set(scale_num);
+		    	}
+		    	
+		    	var people_gift = Math.abs(people.x+50 - tickObj.gift.x);
+		    	if(people_gift < 30 && tickObj.gift.y >= 450) {
+		    		//console.log("del before "+ l+"---i"+i);
+			    	//console.log(scrollGift.toString());
+		    		animate();
+		    		var num = tickObj.gift_obj.num;
+		    		if(num == 0) {
+		    			richText1.text++;
+		    		} else if(num == 1) {
+		    			richText2.text++;
+		    		} else if(num == 2) {
+		    			richText3.text++;
+		    		}
+		    		container_gift.removeChild(tickObj.gift);
+		    		scrollGift.splice(i,1);
+		    		flag = false;
+		    		l = scrollGift.length;
+		    		//console.log("del "+ l+"---i"+i);
+		    		//console.log(scrollGift.toString());
+		    		mathSetGift(false);
+		    		if(scrollGift.length <= 0) break;
+		    	} else {
+		    		flag = true;
+		    	}
+		    	
+			}
+		});
+	</script>
+</html>
